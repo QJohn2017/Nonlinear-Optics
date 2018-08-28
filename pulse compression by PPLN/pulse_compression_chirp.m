@@ -12,7 +12,7 @@ I0 = 3000;  % peak power units:W
 
 %%%%%%%%%% SA behavior of NLM (LN crystal) %%%%%%%%%
 deff = 14E-12;          % m/V
-Lnl =20E-3;             % length of NL crystal, m
+Lnl = 20E-3;             % length of NL crystal, m
 Anl = pi*(2.233e-6)*(2.605e-6);       % mode area at NL crystal
 Rl = 0.75;              % linear reflectivity
 n2_NL = 0;%2.1E-20;
@@ -41,7 +41,7 @@ tem=70;
 n_FF= n_MgLN(lam/um,tem);
 FF=cos(0*pi/t0.*t);
 AFF0 = FF.* sqrt(2*I0/Anl/(n_FF*c*eps_0)).*exp(-(sqrt(2*log(2))*t/t0).^2); %*(sech(1.22*t/t0)).^2; % units V/m
-E= (Anl*n_FF*eps_0*c/2)*sum(abs(AFF0).^2)*dt  % initial energy
+E= (Anl*n_FF*eps_0*c/2)*sum(abs(AFF0).^2)*dt;  % initial energy
 ASHG0 =0;
 
 %%%%%%%%%%%%%%% GVM and GDD of PPLN%%%%%%%%%%%%
@@ -101,7 +101,7 @@ ASHG=ASHG0;
      w_pulse(T) = fwhm_1(T);        % every pulse duration
      L(T) = T.*dzKTP;
      
-     peakpower(T) = Total_Energy1(T)/w_pulse(T)    %peak power
+     peakpower(T) = max(Intensity1(ind,:));    %peak power
      T=T+1;
       end     
 
