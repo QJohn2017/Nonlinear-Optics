@@ -15,7 +15,7 @@ deff = 14E-12;          % m/V
 Lnl = 20E-3;             % length of NL crystal, m
 Anl = pi*(2.832e-6)*(2.233e-6);       % mode area at NL crystal --W1=6.3 W2=7.5
 %Anl = pi*(3.9312e-6)*(1.9585e-6);       % mode area at NL crystal --W1=8.4 W2=10
-%Anl = pi*(2.3751e-6)*(2.0640e-6);       % mode area at NL crystal --W1=5.04 W2=6
+%Anl = pi*(2.e-6)*(1.9585e-6);       % mode area at NL crystal --W1=5.04 W2=6
 
 Rl = 0.75;              % linear rfeflectivity
 n2_NL = 0;%2.1E-20;
