@@ -210,6 +210,7 @@ figure(4)
 set(get(AX(1),'Ylabel'),'String','Pulse Duration(fs)'); 
 set(get(AX(2),'Ylabel'),'String','Peak Power(W)'); 
 xlabel('Length of Crystal(m)'); 
-title('Pulse durantion and Peak power versus length of crystal'); 
+title('Pulse durantion and Peak power versus length of crystal');
+%set(AX(2),'ylim',[0 4e4])
 set(H1,'LineWidth',3);
 set(H2,'LineWIdth',3);
