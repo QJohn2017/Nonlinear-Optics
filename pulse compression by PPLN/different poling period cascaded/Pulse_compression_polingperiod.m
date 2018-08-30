@@ -12,7 +12,7 @@ I0 = 3000;  % peak power units:W
 
 %%%%%%%%%% SA behavior of NLM (LN crystal) %%%%%%%%%
 deff = 14E-12;          % m/V
-Lnl = 15E-3;             % length of NL crystal, m
+Lnl = 20E-3;             % length of NL crystal, m
 %Anl = pi*(2.832e-6)*(2.233e-6);       % mode area at NL crystal --W1=6.3 W2=7.5
 %Anl = pi*(3.9312e-6)*(1.9585e-6);       % mode area at NL crystal --W1=8.4 W2=10
 Anl = pi*(2.3751e-6)*(2.0640e-6);       % mode area at NL crystal --W1=5.04 W2=6
@@ -35,10 +35,8 @@ w = 2*pi*linspace(-1/2/dt,1/2/dt,Nw);
 dw = w(2)-w(1);
 w = ifftshift(w);
 t = ifftshift(t);
-zKTP = linspace(0,Lnl,2*Nzcr);
-zKTP1 = linspace(0,Lnl/2,Nzcr);         % space coordinate in the first part
-dzKTP = zKTP1(2)-zKTP1(1);
-zKTP2 = linspace(Lnl/2+dzKTP,Lnl+dzKTP,Nzcr);
+zKTP = linspace(0,Lnl,Nzcr);        % space coordinate
+dzKTP = zKTP(2)-zKTP(1);
 %%%%%%%%%%%% Initial pulse %%%%%%%%%%%
 um=1e-6;
 tem=70;
@@ -93,7 +91,7 @@ ASHG=ASHG0;
       w_pulse = zeros(Nzcr,1);
       L = zeros(Nzcr,1);
       fwhm_1=zeros(Nrt);
-      for Z2 = zKTP1
+      for Z2 = zKTP(1):zKTP(500)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
@@ -129,7 +127,7 @@ ASHG=ASHG0;
      T=T+1;
       end     
 
-            for Z2 = zKTP2
+            for Z2 = zKTP(501):zKTP(Nzcr)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
