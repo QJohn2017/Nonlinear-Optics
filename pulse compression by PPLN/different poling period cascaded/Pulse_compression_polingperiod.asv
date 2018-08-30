@@ -91,14 +91,14 @@ ASHG=ASHG0;
       w_pulse = zeros(Nzcr,1);
       L = zeros(Nzcr,1);
       fwhm_1=zeros(Nrt);
-      for Z1 = zKTP(1:588)
+      for Z2 = zKTP(1):zKTP(588)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
      AFF = ifft(D_FF.*sAFF);
      ASHG = ifft(D_SHG.*sSHG);
            % nonlinear step using Runga-Kutta 4th order 
-     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev1(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z1,dzKTP);
+     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev1(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z2,dzKTP);
            % Propagation (2st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
@@ -127,7 +127,7 @@ ASHG=ASHG0;
      T=T+1;
       end     
 
-            for Z2 = zKTP(589:Nzcr)
+            for Z2 = zKTP(501):zKTP(Nzcr)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
