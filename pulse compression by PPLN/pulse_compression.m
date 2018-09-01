@@ -13,18 +13,15 @@ I0 = 3000;  % peak power units:W
 %%%%%%%%%% SA behavior of NLM (LN crystal) %%%%%%%%%
 deff = 14E-12;          % m/V
 Lnl = 20E-3;             % length of NL crystal, m
-%Anl = pi*(2.832e-6)*(2.233e-6);       % mode area at NL crystal --W1=6.3 W2=7.5
-%Anl = pi*(3.9312e-6)*(1.9585e-6);       % mode area at NL crystal --W1=8.4 W2=10
-Anl = pi*(2.3751e-6)*(2.0640e-6);       % mode area at NL crystal --W1=5.04 W2=6
-
-Rl = 0.75;              % linear rfeflectivity
+Anl = pi*(2.3751e-6)*(2.064e-6);       % mode area at NL crystal   W2=6um W1=5.04um
+Rl = 0.75;              % linear reflectivity
 n2_NL = 0;%2.1E-20;
 
 %%%%%%%%%%% Sim parameters %%%%%%%%%%%
 Nrt = 1;
-Nw = 8001;
+Nw = 4001;
 Nzfi = 300;
-Nzcr= 1000;
+Nzcr= 2000;
 %dw = 10*BW/(Nw-1);
 %w = ( -(Nw-1)/2 : (Nw-1)/2 )*dw;
 %t = linspace(-pi/dw,pi/dw,Nw);
@@ -35,45 +32,26 @@ w = 2*pi*linspace(-1/2/dt,1/2/dt,Nw);
 dw = w(2)-w(1);
 w = ifftshift(w);
 t = ifftshift(t);
-zKTP = linspace(0,Lnl,Nzcr);        % space coordinate
+zKTP = linspace(0,Lnl,Nzcr);  % space coordinate in KTP
 dzKTP = zKTP(2)-zKTP(1);
+
 %%%%%%%%%%%% Initial pulse %%%%%%%%%%%
 um=1e-6;
 tem=70;
 n_FF= n_MgLN(lam/um,tem);
 FF=cos(0*pi/t0.*t);
 AFF0 = FF.* sqrt(2*I0/Anl/(n_FF*c*eps_0)).*exp(-(sqrt(2*log(2))*t/t0).^2); %*(sech(1.22*t/t0)).^2; % units V/m
-E= (Anl*n_FF*eps_0*c/2)*sum(abs(AFF0).^2)*dt;  % initial energy
+E= (Anl*n_FF*eps_0*c/2)*sum(abs(AFF0).^2)*dt  % initial energy
 ASHG0 =0;
 
 %%%%%%%%%%%%%%% GVM and GDD of PPLN%%%%%%%%%%%%
-% %W1=6.3 W2=7.5
-% beta1_rel = (7.311-7.3597)*1E-9; %2.18/c-2.1845/c;p
-% %beta1_rel = -2e-12;
-% beta1_offset = 0;%11.4e-12;%5.25E-12;
-% beta2_FF =-472E-27;  
-% beta3_FF = 26.8E-40;
-% beta2_SHG =119.5E-27;
-% beta3_SHG =3.101E-40;
-
-% %W1=8.4 W2=10
-% beta1_rel = (7.309-7.353)*1E-9; %2.18/c-2.1845/c;p
-% %beta1_rel = -2e-12;
-% beta1_offset = 0;%11.4e-12;%5.25E-12;
-% beta2_FF =-462.5E-27;  
-% beta3_FF = 26.6E-40;
-% beta2_SHG =122.3E-27;
-% beta3_SHG =3.048E-40;
-
-%W1= 5.04 W2=6
-beta1_rel = (7.314-7.3665)*1E-9; %2.18/c-2.1845/c;p
+beta1_rel = -5.25e-11; %2.18/c-2.1845/c;p
 %beta1_rel = -2e-12;
 beta1_offset = 0;%11.4e-12;%5.25E-12;
 beta2_FF =-483E-27;  
-beta3_FF = 26.58E-40;
+beta3_FF = 2658E-42;
 beta2_SHG =116.4E-27;
-beta3_SHG =3.155E-40;
-
+beta3_SHG =315.5E-42;
 D_FF = exp(-j*(beta1_offset*w + beta2_FF/2*w.^2 + beta3_FF/6*w.^3)*dzKTP/2);
 D_SHG = exp(-1i*((beta1_rel + beta1_offset)*w + beta2_SHG/2*w.^2 + beta3_SHG/6*w.^3)*dzKTP/2);
 
@@ -88,17 +66,19 @@ AFF=AFF0;
 ASHG=ASHG0; 
 %%%%%%%%%%%passing PPLN
       T=1;
+      Total_Energy_ff=zeros(Nzcr,1);
+      Total_Energy_shg=zeros(Nzcr,1);
       w_pulse = zeros(Nzcr,1);
       L = zeros(Nzcr,1);
       fwhm_1=zeros(Nrt);
-      for Z2 = zKTP(1):zKTP(588)
+      for Z2 = zKTP
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
      AFF = ifft(D_FF.*sAFF);
      ASHG = ifft(D_SHG.*sSHG);
            % nonlinear step using Runga-Kutta 4th order 
-     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev1(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z2,dzKTP);
+     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z2,dzKTP);
            % Propagation (2st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
@@ -108,13 +88,15 @@ ASHG=ASHG0;
      Ishgincry(1,T) = max(abs(ASHG)).^2/max(abs(AFF0)).^2;
      
      RNL=[];
-     AFF1=AFF;
-     Iff_1(T,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF).^2;
-     beam1(T,:) = Iff_1(T,:);
-     Total_Energy1(T) = sum(abs(beam1(T,:))*dt);
+     AFF_1(T,:)=AFF;
+     ASHG_1(T,:)=ASHG;
+     Iff_1(T,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF_1(T,:)).^2;
+     Ishg_1(T,:) = (Anl*n_SHG*eps_0*c/2)*abs(ASHG_1(T,:)).^2;
+     Total_Energy_ff(T) = sum(abs(Iff_1(T,:))*dt);
+     Total_Energy_shg(T) = sum(abs(Ishg_1(T,:))*dt);
     
      Intensity1=Iff_1;
-
+     
      ind = T;
      AA(ind) = max(Intensity1(ind,:));
      fwhm_=find(abs(Intensity1(ind,:))>abs(max(Intensity1(ind,:))/2));
@@ -123,52 +105,17 @@ ASHG=ASHG0;
      w_pulse(T) = fwhm_1(T);        % every pulse duration
      L(T) = T.*dzKTP;
      
-     peakpower(T) = max(Intensity1(ind,:));    %peak power
+     peakpower(T) = max(Iff_1(T,:)); %Total_Energy1(T)/w_pulse(T);    %peak power
+     peakpower_shg(T) = max(Ishg_1(T,:)); %Total_Energy1(T)/w_pulse(T);    %peak power
      T=T+1;
       end     
 
-            for Z2 = zKTP(501):zKTP(Nzcr)
-           % Propagation (1st half)
-     sAFF = fft(AFF);
-     sSHG = fft(ASHG);
-     AFF = ifft(D_FF.*sAFF);
-     ASHG = ifft(D_SHG.*sSHG);
-           % nonlinear step using Runga-Kutta 4th order 
-     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev2(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z2,dzKTP);
-           % Propagation (2st half)
-     sAFF = fft(AFF);
-     sSHG = fft(ASHG);
-     AFF = ifft(D_FF.*sAFF);
-     ASHG = ifft(D_SHG.*sSHG);   
-     
-     Ishgincry(1,T) = max(abs(ASHG)).^2/max(abs(AFF0)).^2;
-     
-     RNL=[];
-     AFF1=AFF;
-     Iff_1(T,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF).^2;
-     beam1(T,:) = Iff_1(T,:);
-     Total_Energy1(T) = sum(abs(beam1(T,:))*dt);
-    
-     Intensity1=Iff_1;
-
-     ind = T;
-     AA(ind) = max(Intensity1(ind,:));
-     fwhm_=find(abs(Intensity1(ind,:))>abs(max(Intensity1(ind,:))/2));
-     fwhm_1(ind)=length(fwhm_)+1;
-     fwhm_1(ind)=fwhm_1(ind)/(length(t)+1)*(6*1e3);   
-     w_pulse(T) = fwhm_1(T);        % every pulse duration
-     L(T) = T.*dzKTP;
-     
-     peakpower(T) = max(Intensity1(ind,:));    %peak power
-     T=T+1;
-      end     
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %%
   figure(1); plot(zKTP',Ishgincry);
-  AFF1=AFF;
   Iff1(1,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF).^2;
   Ishg1(1,:) = (Anl*n_SHG*eps_0*c/2)*abs(ASHG).^2;
  
-%%
 fwhm=[];
 RNL=[];
 Intensity=Iff1;
@@ -183,26 +130,36 @@ end
 
 fwhm1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%% pulse
 figure(2)
-po=1;
+po=round(8e-3/Lnl*2000);;
 AFF00 = FF.*sqrt(2*I00/Anl/(n_FF*c*eps_0)).*exp(-(sqrt(2*log(2))*t/t00).^2);  % units V/m
 Iff00 = (Anl*n_FF*eps_0*c/2)*abs(AFF00).^2;
-%plot(t,Ii(po,:)./max(Ii(po,:)),'r',t,Iff0(po,:)./max(Iff0(po,:)),'b',t,Iff1(po,:)./max(Iff1(po,:)),'k',t,Ishg1(po,:)./max(Ishg1(po,:)),'g--')
-%legend('i','ff0','ff1','shg1')
-plot(t,Iff00(po,:)./max(1),'k',t,Iff1(po,:)./max(1),'r')
 
+plot(t*1e15,Iff00(1,:)./max(1),'k', t*1e15,Iff_1(po,:)./max(1),'r','LineWidth',2)
+set(gca,'XTick',-900:300:900,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'YTick',0:1e4:4e4,'FontSize',15,'fontname','Arial')   % y axis range
+xlabel('Pulse Duration(fs)')
+ylabel('Power (W)')
+axis([-1000 1000 0 4e4])
+legend('Input','Output')
+
+%%%%%%%%% spectrum
 figure(3)
-po=1;
-fre=(w+2*w0);
-lamm=2*pi*c./fre;
-plot(lamm,10*log10(abs(fft(AFF00(po,:))./max(fft(AFF00(po,:))))),'k',lamm,10*log10(abs(fft(ASHG(po,:))./max(fft(ASHG(po,:))))),'r')
-axis([0 8e-6 -20 0])
-hold on;
-po=1;
+po=round(14e-3/Lnl*2000);
 fre=(w+w0);
 lamm=2*pi*c./fre;
-plot(lamm,10*log10(abs(fft(AFF00(po,:))./max(fft(AFF00(po,:))))),'k',lamm,10*log10(abs(fft(AFF(po,:))./max(fft(AFF(po,:))))),'r')
-axis([0 8e-6 -20 0])
+plot(lamm*1e6,abs(fft(AFF_1(po,:))),'b','LineWidth',2); hold on;
+fre=(w+2*w0);
+lamm=2*pi*c./fre;
+plot(lamm*1e6,abs(fft(ASHG_1(po,:))),'r','LineWidth',2);
+set(gca,'XTick',0:1:8,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'YTick',0:0.5e10:4e10,'FontSize',15,'fontname','Arial')   % y axis range
+xlabel('wavelength (\mum)')
+ylabel('Intensity')
+legend('FF','SHG')
+axis([0 8 0 4e10]) 
+
 %plot(zNrd,AA)
 %plot(t,Ii(Nrt,:))
 % yyaxis right
@@ -219,7 +176,7 @@ SHG_conversion=(FF0-FF1)/FF0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%% beam quality judgement
 beam=[];
-beam = Iff1(1,:);
+beam = Iff_1(po,:);
 
 Total_Energy = sum(abs(beam(1,:))*dt);
 
@@ -245,11 +202,57 @@ Q=beam_Energy/Total_Energy
 ita=fwhm1*1e-15*max(Iff1)/(I0*t0)
 
 figure(4)
-[AX,H1,H2] = plotyy(L,w_pulse,L,peakpower,'plot');
+subplot(1,2,1)
+[AX,H1,H2] = plotyy(L*1e3,w_pulse,L*1e3,peakpower,'plot'); hold on;
 set(get(AX(1),'Ylabel'),'String','Pulse Duration(fs)'); 
 set(get(AX(2),'Ylabel'),'String','Peak Power(W)'); 
-xlabel('Length of Crystal(m)'); 
-title('Pulse durantion and Peak power versus length of crystal');
-%set(AX(2),'ylim',[0 4e4])
+set(AX(1),'FontSize',15,'fontname','Arial'); 
+set(AX(2),'FontSize',15,'fontname','Arial');
+set(AX(1),'yTick',[0:100:1000]); 
+set(AX(2),'yTick',[0:1e4:4e4]);
+xlabel('Crystal length(mm)'); 
+%title('Pulse durantion and Peak power versus length of crystal'); 
 set(H1,'LineWidth',3);
 set(H2,'LineWIdth',3);
+subplot(1,2,2)
+plot(L*1e3,peakpower,L*1e3,peakpower_shg,'LineWidth',3);
+set(gca,'YTick',0:0.5e4:4e4,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'XTick',0:5:20,'FontSize',15,'fontname','Arial')   % y axis range
+ylabel('Peak Power(W)'); 
+xlabel('Crystal length(mm)');
+legend('FF','SHG')
+
+figure(5)
+Ifff_1(1001:2000,:)=Iff_1(1:1000,:);
+Ifff_1(1:1000,:)=Iff_1(1001:2000,:);
+imagesc((zKTP*1000),fftshift(t*1e15),fftshift(Ifff_1'))
+set(gca,'YTick',-500:100:500,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'XTick',0:2:20,'FontSize',15,'fontname','Arial')   % y axis range
+ylabel('Time domain(fs)')
+xlabel('Crystal length(mm)')
+axis([0 20 -500 500])
+caxis([0 1e4])
+colormap jet
+
+figure(6)
+Isshg_1(1001:2000,:)=Ishg_1(1:1000,:);
+Isshg_1(1:1000,:)=Ishg_1(1001:2000,:);
+imagesc((zKTP*1000),fftshift(t*1e15),fftshift(Isshg_1'))
+set(gca,'YTick',-500:100:500,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'XTick',0:2:20,'FontSize',15,'fontname','Arial')   % y axis range
+ylabel('Pulse Duration(fs)')
+xlabel('Crystal length(mm)')
+axis([0 20 -500 500])
+caxis([0 4e3])
+colormap jet
+
+figure(7)
+plot(zKTP*1000,Total_Energy_ff*1e9,'b',zKTP*1000,Total_Energy_shg*1e9,'r',zKTP*1000,Total_Energy_ff*1e9+Total_Energy_shg*1e9,'k','LineWidth',2)
+%set(gca,'YTick',0:100:500,'FontSize',15,'fontname','Arial')   % x axis range
+set(gca,'XTick',0:2:20,'FontSize',15,'fontname','Arial')   % y axis range
+ylabel('Energy(nJ)')
+xlabel('Crystal length(mm)')
+legend('FF engergy','SHG engergy','Total engergy')
+axis([0 20 0 2])
+caxis([0 1e4])
+colormap jet

@@ -9,7 +9,7 @@ tem=70;
 % kapa=1E1;
 
 n_FF= n_MgLN(lam/um,tem);
-dk = -10e3;   %k_SHG - 2*k_FF-kG;
+dk = -30e3;   %k_SHG - 2*k_FF-kG;
 n_SHG = lamSHG/2/pi*(dk+2*2*pi*n_FF/lam);
 n2_eff=0;%-(4*pi/(c*eps_0))*(Lnl/lam)*(deff^2/(n_SHG*n_FF*n_FF))/(dk*Lnl)
 -(4*pi/(c*eps_0))*(Lnl/lam)*(deff^2/(n_SHG*n_FF*n_FF))/(dk*Lnl)

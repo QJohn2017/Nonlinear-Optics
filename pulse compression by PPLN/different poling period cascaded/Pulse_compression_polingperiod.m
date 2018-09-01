@@ -1,3 +1,4 @@
+%% parameter setting
 clear,clc
 global c eps_0 t w hbar;
 c =  2.99792458E8;      % speed of light
@@ -10,9 +11,9 @@ I00 = 3000;  % peak power units:W
 t0 = 500E-15;
 I0 = 3000;  % peak power units:W
 
-%%%%%%%%%% SA behavior of NLM (LN crystal) %%%%%%%%%
+%% SA behavior of NLM (LN crystal) %%%%%%%%%
 deff = 14E-12;          % m/V
-Lnl = 20E-3;             % length of NL crystal, m
+Lnl = 10.59E-3;             % length of NL crystal, m
 %Anl = pi*(2.832e-6)*(2.233e-6);       % mode area at NL crystal --W1=6.3 W2=7.5
 %Anl = pi*(3.9312e-6)*(1.9585e-6);       % mode area at NL crystal --W1=8.4 W2=10
 Anl = pi*(2.3751e-6)*(2.0640e-6);       % mode area at NL crystal --W1=5.04 W2=6
@@ -20,7 +21,7 @@ Anl = pi*(2.3751e-6)*(2.0640e-6);       % mode area at NL crystal --W1=5.04 W2=6
 Rl = 0.75;              % linear rfeflectivity
 n2_NL = 0;%2.1E-20;
 
-%%%%%%%%%%% Sim parameters %%%%%%%%%%%
+%% Sim parameters %%%%%%%%%%%
 Nrt = 1;
 Nw = 8001;
 Nzfi = 300;
@@ -81,7 +82,7 @@ D_SHG = exp(-1i*((beta1_rel + beta1_offset)*w + beta2_SHG/2*w.^2 + beta3_SHG/6*w
 supergaussian = exp(-(t./6e-12).^6);
 AFF0 = AFF0 .*supergaussian;
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% propagation simulation
 %
 Iff0 = (Anl*n_FF*eps_0*c/2)*abs(AFF0).^2;
 AFF=AFF0;
@@ -91,7 +92,9 @@ ASHG=ASHG0;
       w_pulse = zeros(Nzcr,1);
       L = zeros(Nzcr,1);
       fwhm_1=zeros(Nrt);
-      for Z1 = zKTP(1:588)
+    %% first part
+     L1 = 206;      % change the length
+      for Z1 = zKTP(1:L1)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
@@ -127,7 +130,9 @@ ASHG=ASHG0;
      T=T+1;
       end     
 
-            for Z2 = zKTP(589:Nzcr)
+     %% second part
+     L2 = 542;
+            for Z2 = zKTP(L1+1:L2)
            % Propagation (1st half)
      sAFF = fft(AFF);
      sSHG = fft(ASHG);
@@ -161,14 +166,52 @@ ASHG=ASHG0;
      
      peakpower(T) = max(Intensity1(ind,:));    %peak power
      T=T+1;
+            end   
+%% third part  
+% change the length
+      for Z3 = zKTP(L2+1:Nzcr)
+           % Propagation (1st half)
+     sAFF = fft(AFF);
+     sSHG = fft(ASHG);
+     AFF = ifft(D_FF.*sAFF);
+     ASHG = ifft(D_SHG.*sSHG);
+           % nonlinear step using Runga-Kutta 4th order 
+     [AFF, ASHG, n_FF, n_SHG] = dadzLN_rev3(AFF,ASHG,lam,lamSHG,deff,n2_NL,Anl,Lnl,Z3,dzKTP);
+           % Propagation (2st half)
+     sAFF = fft(AFF);
+     sSHG = fft(ASHG);
+     AFF = ifft(D_FF.*sAFF);
+     ASHG = ifft(D_SHG.*sSHG);   
+     
+     Ishgincry(1,T) = max(abs(ASHG)).^2/max(abs(AFF0)).^2;
+     
+     RNL=[];
+     AFF1=AFF;
+     Iff_1(T,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF).^2;
+     beam1(T,:) = Iff_1(T,:);
+     Total_Energy1(T) = sum(abs(beam1(T,:))*dt);
+    
+     Intensity1=Iff_1;
+
+     ind = T;
+     AA(ind) = max(Intensity1(ind,:));
+     fwhm_=find(abs(Intensity1(ind,:))>abs(max(Intensity1(ind,:))/2));
+     fwhm_1(ind)=length(fwhm_)+1;
+     fwhm_1(ind)=fwhm_1(ind)/(length(t)+1)*(6*1e3);   
+     w_pulse(T) = fwhm_1(T);        % every pulse duration
+     L(T) = T.*dzKTP;
+     
+     peakpower(T) = max(Intensity1(ind,:));    %peak power
+     T=T+1;
       end     
+
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   figure(1); plot(zKTP',Ishgincry);
   AFF1=AFF;
   Iff1(1,:) = (Anl*n_FF*eps_0*c/2)*abs(AFF).^2;
   Ishg1(1,:) = (Anl*n_SHG*eps_0*c/2)*abs(ASHG).^2;
  
-%%
+%% result
 fwhm=[];
 RNL=[];
 Intensity=Iff1;

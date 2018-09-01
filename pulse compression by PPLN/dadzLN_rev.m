@@ -10,9 +10,10 @@ tem=70;
 
 n_FF= n_MgLN(lam/um,tem);
 dk = -28e3;   %k_SHG - 2*k_FF-kG;
+%[dk,phase_mis] = cascaded_quadratic_nonlinearity(Lnl,Z2,dzKTP);
 n_SHG = lamSHG/2/pi*(dk+2*2*pi*n_FF/lam);
-n2_eff=0;%-(4*pi/(c*eps_0))*(Lnl/lam)*(deff^2/(n_SHG*n_FF*n_FF))/(dk*Lnl)
--(4*pi/(c*eps_0))*(Lnl/lam)*(deff^2/(n_SHG*n_FF*n_FF))/(dk*Lnl)
+n2_eff=0;
+-(4*pi/(c*eps_0))*(Lnl/lam)*(deff^2/(n_SHG*n_FF*n_FF))/(dk*Lnl);
         %%% efficiency prediction
         LL=sqrt(n_FF*n_SHG)*c/(2*w_FF*deff*max(abs(AFF)));
         
