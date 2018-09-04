@@ -12,8 +12,8 @@ I0 = 3000;  % peak power units:W
 
 %%%%%%%%%% SA behavior of NLM (LN crystal) %%%%%%%%%
 deff = 14E-12;          % m/V
-Lnl = 20E-3;             % length of NL crystal, m
-Anl = pi*(2.3751e-6)*(2.064e-6);       % mode area at NL crystal   W2=6um W1=5.04um
+Lnl = 14E-3;             % length of NL crystal, m
+Anl = pi*(2.591e-6)*(2.406e-6);       % mode area at NL crystal   W2=6um W1=5.04um
 Rl = 0.75;              % linear reflectivity
 n2_NL = 0;%2.1E-20;
 
@@ -132,11 +132,11 @@ fwhm1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%% pulse
 figure(2)
-po=round(8e-3/Lnl*2000);;
+po=round(14e-3/Lnl*2000);
 AFF00 = FF.*sqrt(2*I00/Anl/(n_FF*c*eps_0)).*exp(-(sqrt(2*log(2))*t/t00).^2);  % units V/m
 Iff00 = (Anl*n_FF*eps_0*c/2)*abs(AFF00).^2;
-
 plot(t*1e15,Iff00(1,:)./max(1),'k', t*1e15,Iff_1(po,:)./max(1),'r','LineWidth',2)
+
 set(gca,'XTick',-900:300:900,'FontSize',15,'fontname','Arial')   % x axis range
 set(gca,'YTick',0:1e4:4e4,'FontSize',15,'fontname','Arial')   % y axis range
 xlabel('Pulse Duration(fs)')
@@ -203,7 +203,7 @@ ita=fwhm1*1e-15*max(Iff1)/(I0*t0)
 
 figure(4)
 subplot(1,2,1)
-[AX,H1,H2] = plotyy(L*1e3,w_pulse,L*1e3,peakpower,'plot'); hold on;
+[AX,H1,H2] = plotyy(L*1e3,w_pulse,L*1e3,peakpower,'plot'); 
 set(get(AX(1),'Ylabel'),'String','Pulse Duration(fs)'); 
 set(get(AX(2),'Ylabel'),'String','Peak Power(W)'); 
 set(AX(1),'FontSize',15,'fontname','Arial'); 
@@ -240,7 +240,7 @@ Isshg_1(1:1000,:)=Ishg_1(1001:2000,:);
 imagesc((zKTP*1000),fftshift(t*1e15),fftshift(Isshg_1'))
 set(gca,'YTick',-500:100:500,'FontSize',15,'fontname','Arial')   % x axis range
 set(gca,'XTick',0:2:20,'FontSize',15,'fontname','Arial')   % y axis range
-ylabel('Pulse Duration(fs)')
+ylabel('Time domain(fs)')
 xlabel('Crystal length(mm)')
 axis([0 20 -500 500])
 caxis([0 4e3])
@@ -253,6 +253,6 @@ set(gca,'XTick',0:2:20,'FontSize',15,'fontname','Arial')   % y axis range
 ylabel('Energy(nJ)')
 xlabel('Crystal length(mm)')
 legend('FF engergy','SHG engergy','Total engergy')
-axis([0 20 0 2])
+axis([0 20 0 3])
 caxis([0 1e4])
 colormap jet
