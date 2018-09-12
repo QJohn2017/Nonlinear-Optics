@@ -1,2 +1,2 @@
 # Nonlinear-Optics
-Nonlinear Optics Matlab Code
+Nonlinear Optics Code
